@@ -675,10 +675,16 @@ setInterval(()=>{if(CFG.theme==="psy"&&A&&A.bars){const v=getComputedStyle(docum
 if("serviceWorker" in navigator&&location.protocol==="https:"){navigator.serviceWorker.register("sw.js").catch(()=>{});if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}
 let spDone=0;function setNom(){const i=$("spn"),k=$("spk"),v=i.value.trim();if(!v){i.focus();return}if(k.classList.contains("on"))return;i.blur();k.classList.add("on","pop");CFG.nom=v.slice(0,20);try{save();render()}catch(e){}setTimeout(spOff,650)}
 function spOff(){if(spDone)return;if(!CFG.nom){const a=$("spa");if(a&&!a.classList.contains("on")){a.classList.add("on");setTimeout(()=>$("spn").focus(),400)}return}spDone=1;const e=$("sp");if(e){e.classList.add("out");setTimeout(()=>e.remove(),800)}}
-applyTheme();{const d=$("spd");if(d)d.textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}setTimeout(spOff,3700);setInterval(()=>{const e=$("chr");if(e)e.textContent=dur()},1000);
+applyTheme();{const d=$("spd");if(d)d.textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"})}
+/* reprise : si l'appli a été utilisée il y a moins de 30 min, pas d'écran de lancement, retour à la même page et au même endroit */
+const RS=(()=>{try{return JSON.parse(localStorage.getItem("sl:resume")||"null")}catch(e){return null}})();
+const QUICK=!!(CFG.nom&&RS&&Date.now()-RS.t<30*60e3);
+function keepRs(){try{localStorage.setItem("sl:resume",JSON.stringify({t:Date.now(),h:location.hash,y:Math.round(scrollY)}))}catch(e){}}
+addEventListener("visibilitychange",()=>{if(document.hidden)keepRs()});addEventListener("pagehide",keepRs);setInterval(()=>{if(!document.hidden)keepRs()},5000);
+if(QUICK){spDone=1;const e=$("sp");if(e)e.remove();if(!location.hash&&RS.h&&RS.h!=="#")history.replaceState(null,"",RS.h)}else setTimeout(spOff,3700);setInterval(()=>{const e=$("chr");if(e)e.textContent=dur()},1000);
 const V={home,seance,prog,corps,hist,disques,reglages};
 addEventListener("hashchange",()=>{an();render()});
-an();render();
+if(QUICK){render();requestAnimationFrame(()=>scrollTo(0,RS.y||0))}else{an();render()}
 if(C&&A&&A.keepAwake)A.keepAwake(true);
 </script>
 </body>
